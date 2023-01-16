@@ -1,4 +1,4 @@
-package com.drkswg.cookingrecipesbot;
+package com.drkswg.cookingrecipesbot.constants;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -12,7 +12,6 @@ public enum ButtonNameEnum {
     BREAKFASTS("Завтраки"),
     SOUPS("Супы"),
     DISHES("Горячие блюда");
-
 
     String name;
 }

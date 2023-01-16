@@ -1,4 +1,4 @@
-package com.drkswg.cookingrecipesbot;
+package com.drkswg.cookingrecipesbot.constants;
 
 import lombok.AccessLevel;
 import lombok.Getter;
