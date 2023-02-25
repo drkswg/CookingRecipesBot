@@ -2,7 +2,9 @@ package com.drkswg.cookingrecipesbot.service;
 
 import com.drkswg.cookingrecipesbot.dao.RecipeDAO;
 import com.drkswg.cookingrecipesbot.entity.Recipe;
+import com.drkswg.cookingrecipesbot.entity.RecipeCategory;
 import com.drkswg.cookingrecipesbot.entity.RecipeStep;
+import com.drkswg.cookingrecipesbot.entity.User;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.jvnet.hk2.annotations.Service;
@@ -19,6 +21,40 @@ public class RecipeServiceImpl implements RecipeService {
     @Autowired
     public RecipeServiceImpl(RecipeDAO DAO) {
         this.DAO = DAO;
+    }
+
+    @Override
+    @Transactional
+    public void deleteNotFinishedRecipes(long userId) { DAO.deleteNotFinishedRecipes(userId); }
+
+    @Override
+    @Transactional
+    public Recipe getRecipeWithNoDescription(User author) { return DAO.getRecipeWithNoDescription(author); }
+
+    @Override
+    @Transactional
+    public void updateRecipe(Recipe recipe) { DAO.updateRecipe(recipe); }
+
+    @Override
+    @Transactional
+    public Recipe getBlankRecipe(User author) { return DAO.getBlankRecipe(author); }
+
+    @Override
+    @Transactional
+    public RecipeCategory getRecipeCategory(String categoryName) {
+        return DAO.getRecipeCategory(categoryName);
+    }
+
+    @Override
+    @Transactional
+    public Recipe addNewRecipeAuthorAndCategory(User author, RecipeCategory recipeCategory) {
+        return DAO.addNewRecipeAuthorAndCategory(author, recipeCategory);
+    }
+
+    @Override
+    @Transactional
+    public User addUserIfNotExist(long id, String userName) {
+        return DAO.addUserIfNotExist(id, userName);
     }
 
     @Override

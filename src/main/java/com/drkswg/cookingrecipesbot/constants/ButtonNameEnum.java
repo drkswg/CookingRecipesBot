@@ -9,9 +9,11 @@ import lombok.experimental.FieldDefaults;
 @RequiredArgsConstructor
 @Getter
 public enum ButtonNameEnum {
-    BREAKFASTS("Завтраки"),
-    SOUPS("Супы"),
-    DISHES("Горячие блюда");
+    BREAKFASTS("Завтраки", "recipeCategory"),
+    SOUPS("Супы", "recipeCategory"),
+    DISHES("Горячие блюда", "recipeCategory"),
+    ADD_RECIPE("Добавить рецепт", "service");
 
     String name;
+    String type;
 }

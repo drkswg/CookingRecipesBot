@@ -12,13 +12,16 @@ import java.util.List;
 @Component
 public class ReplyKeyboardMaker {
     public ReplyKeyboardMarkup getMainMenuKeyboard() {
-        KeyboardRow row = new KeyboardRow();
-        row.add(new KeyboardButton(ButtonNameEnum.BREAKFASTS.getName()));
-        row.add(new KeyboardButton(ButtonNameEnum.SOUPS.getName()));
-        row.add(new KeyboardButton(ButtonNameEnum.DISHES.getName()));
+        KeyboardRow firstRow = new KeyboardRow();
+        KeyboardRow secondRow = new KeyboardRow();
+        firstRow.add(new KeyboardButton(ButtonNameEnum.BREAKFASTS.getName()));
+        firstRow.add(new KeyboardButton(ButtonNameEnum.SOUPS.getName()));
+        firstRow.add(new KeyboardButton(ButtonNameEnum.DISHES.getName()));
+        secondRow.add(new KeyboardButton(ButtonNameEnum.ADD_RECIPE.getName()));
 
         List<KeyboardRow> keyboard = new ArrayList<>();
-        keyboard.add(row);
+        keyboard.add(firstRow);
+        keyboard.add(secondRow);
 
         final ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
         replyKeyboardMarkup.setKeyboard(keyboard);

@@ -37,4 +37,8 @@ public class Recipe {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "recipe")
     Set<Photo> photos;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "added_by")
+    User user;
 }

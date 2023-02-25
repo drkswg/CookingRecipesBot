@@ -2,6 +2,7 @@ package com.drkswg.cookingrecipesbot;
 
 import com.drkswg.cookingrecipesbot.handler.CallbackQueryHandler;
 import com.drkswg.cookingrecipesbot.handler.MessageHandler;
+import com.drkswg.cookingrecipesbot.model.UserStep;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,6 +20,8 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.starter.SpringWebhookBot;
 
 import java.io.File;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 @Setter
@@ -29,11 +32,16 @@ public class Bot extends SpringWebhookBot {
     String botToken;
     MessageHandler messageHandler;
     CallbackQueryHandler callbackQueryHandler;
+    Set<UserStep> usersSteps;
 
-    public Bot(SetWebhook setWebhook, MessageHandler messageHandler, CallbackQueryHandler callbackQueryHandler) {
+    public Bot(SetWebhook setWebhook,
+               MessageHandler messageHandler,
+               CallbackQueryHandler callbackQueryHandler,
+               Set<UserStep> usersSteps) {
         super(setWebhook);
         this.messageHandler = messageHandler;
         this.callbackQueryHandler = callbackQueryHandler;
+        this.usersSteps = usersSteps;
     }
 
     @Override
@@ -41,7 +49,13 @@ public class Bot extends SpringWebhookBot {
         try {
             return handleUpdate(update);
         } catch (Exception e) {
-            return new SendMessage(update.getMessage().getChatId().toString(), "Ошибочка вышла, вооот");
+            e.printStackTrace();
+
+            try {
+                return new SendMessage(update.getMessage().getChatId().toString(), "Ошибочка вышла, вооот");
+            } catch (NullPointerException nullEx) {
+                return new SendMessage();
+            }
         }
     }
 
@@ -53,10 +67,21 @@ public class Bot extends SpringWebhookBot {
         } else {
             Message message = update.getMessage();
             if (message != null) {
-                return messageHandler.answerMessage(update.getMessage());
+                return messageHandler.answerMessage(update.getMessage(), this);
             }
         }
 
         return null;
+    }
+
+    public UserStep getUserStep(long chatId) {
+        return usersSteps.stream()
+                .filter(userStep -> userStep.getChatId() == chatId)
+                .findAny()
+                .orElse(null);
+    }
+
+    public Set<UserStep> getUsersSteps() {
+        return usersSteps;
     }
 }

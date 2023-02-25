@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+<!--    <property name="LOGS" value="./logs" />-->
+
+    <appender name="Console"
+              class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <Pattern>
+                %red(%d{UTF-8}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable
+            </Pattern>
+        </layout>
+    </appender>
+
+<!--    <appender name="RollingFile"-->
+<!--              class="ch.qos.logback.core.rolling.RollingFileAppender">-->
+<!--        <file>${LOGS}/startIpCheckService.log</file>-->
+<!--        <encoder-->
+<!--                class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">-->
+<!--            <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>-->
+<!--        </encoder>-->
+
+<!--        <rollingPolicy-->
+<!--                class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">-->
+<!--            <fileNamePattern>${LOGS}/startIpCheckService_%d{yyyy-MM-dd}.log</fileNamePattern>-->
+<!--        </rollingPolicy>-->
+<!--    </appender>-->
+
+    <root level="info">
+<!--        <appender-ref ref="RollingFile" />-->
+        <appender-ref ref="Console" />
+    </root>
+
+    <logger name="com/drkswg/cookingrecipesbot" level="trace" additivity="false">
+<!--        <appender-ref ref="RollingFile" />-->
+        <appender-ref ref="Console" />
+    </logger>
+
+</configuration>

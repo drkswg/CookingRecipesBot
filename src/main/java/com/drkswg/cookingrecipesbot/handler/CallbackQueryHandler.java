@@ -1,11 +1,18 @@
 package com.drkswg.cookingrecipesbot.handler;
 
 import com.drkswg.cookingrecipesbot.Bot;
-import com.drkswg.cookingrecipesbot.entity.Photo;
-import com.drkswg.cookingrecipesbot.entity.Recipe;
-import com.drkswg.cookingrecipesbot.entity.RecipeStep;
+import com.drkswg.cookingrecipesbot.constants.ButtonNameEnum;
+import com.drkswg.cookingrecipesbot.entity.*;
 import com.drkswg.cookingrecipesbot.keyboard.InlineKeyboardMaker;
+import com.drkswg.cookingrecipesbot.model.UserStep;
 import com.drkswg.cookingrecipesbot.service.RecipeService;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -13,28 +20,36 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.CallbackQuery;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 
+import javax.validation.constraints.NotNull;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
 @Component
+@RequiredArgsConstructor
+@Getter
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class CallbackQueryHandler {
-    private static final String PATTERN_NOT_MATCHED = "Совпадений по паттерну не найдено";
-    private final RecipeService recipeService;
-    private final InlineKeyboardMaker inlineKeyboardMaker;
-    private Bot bot;
-
-    public CallbackQueryHandler(RecipeService recipeService, InlineKeyboardMaker inlineKeyboardMaker) {
-        this.recipeService = recipeService;
-        this.inlineKeyboardMaker = inlineKeyboardMaker;
-    }
+    static final Logger LOGGER = LoggerFactory.getLogger(CallbackQueryHandler.class);
+    static final String PATTERN_NOT_MATCHED = "Совпадений по паттерну не найдено";
+    final RecipeService recipeService;
+    final InlineKeyboardMaker inlineKeyboardMaker;
+    Bot bot;
 
     public BotApiMethod<?> processCallbackQuery(CallbackQuery buttonQuery, Bot bot) {
         this.bot = bot;
         String chatId = buttonQuery.getMessage().getChatId().toString();
         String data = buttonQuery.getData();
+
+        for (ButtonNameEnum button : ButtonNameEnum.values()) {
+            if (button.getType().equals("recipeCategory") & button.getName().equals(data)) {
+                return createTempRecipe(buttonQuery, data);
+            }
+        }
+
         boolean recipeStep = !searchForMatch(data, "\\d+").equals(PATTERN_NOT_MATCHED);
 
         if (recipeStep) {
@@ -42,6 +57,24 @@ public class CallbackQueryHandler {
         } else {
             return getIngredientsMessage(chatId, data);
         }
+    }
+
+    private SendMessage createTempRecipe(CallbackQuery buttonQuery, String recipeCategoryName) {
+        String chatId = buttonQuery.getMessage().getChatId().toString();
+        long userId = buttonQuery.getFrom().getId();
+        String userName = buttonQuery.getFrom().getUserName();
+        User author = recipeService.addUserIfNotExist(userId, userName);
+        RecipeCategory recipeCategory = recipeService.getRecipeCategory(recipeCategoryName);
+        Recipe tempRecipe = recipeService.addNewRecipeAuthorAndCategory(author, recipeCategory);
+        UserStep currentStep = bot.getUserStep(buttonQuery.getMessage().getChatId());
+        LOGGER.info(String.format("""
+                Добавление информации о шагах пользователя (chat_id): %s -> add_recipe_name, рецепт -> %s
+                """,
+                buttonQuery.getMessage().getChatId(), tempRecipe));
+        currentStep.setRecipe(tempRecipe);
+        currentStep.setStep("add_temp_recipe");
+
+        return new SendMessage(chatId, "Введите название рецепта:");
     }
 
     private SendMessage getIngredientsMessage(String chatId, String data) {
@@ -68,7 +101,6 @@ public class CallbackQueryHandler {
         if (recipeStepsNumber >= recipeStepNum) {
             recipeStep = recipeService.getNextStep(recipe, recipeStepNum);
             message = new SendMessage(chatId, recipeStep.getDescription());
-
         }
 
         if (recipeStepsNumber > recipeStepNum) {
@@ -105,8 +137,8 @@ public class CallbackQueryHandler {
             msg.setChatId(chatId);
             msg.setPhoto(new InputFile(new File(filePath)));
             bot.execute(msg);
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Exception exc) {
+            LOGGER.error("Ошибка при отправке фото рецепта", exc);
         }
     }
 }
