@@ -1,6 +1,5 @@
 package com.drkswg.cookingrecipesbot.handler;
 
-import com.drkswg.cookingrecipesbot.Bot;
 import com.drkswg.cookingrecipesbot.constants.BotMessagesEnum;
 import com.drkswg.cookingrecipesbot.entity.Recipe;
 import com.drkswg.cookingrecipesbot.entity.User;
@@ -9,10 +8,7 @@ import com.drkswg.cookingrecipesbot.keyboard.ReplyKeyboardMaker;
 import com.drkswg.cookingrecipesbot.model.UserStep;
 import com.drkswg.cookingrecipesbot.service.RecipeService;
 import lombok.AccessLevel;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -20,16 +16,15 @@ import org.telegram.telegrambots.meta.api.objects.Message;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
-@RequiredArgsConstructor
-public class MessageHandler {
-    static final Logger LOGGER = LoggerFactory.getLogger(MessageHandler.class);
-    final ReplyKeyboardMaker replyKeyboardMaker;
-    final InlineKeyboardMaker inlineKeyboardMaker;
-    final RecipeService recipeService;
-    Bot bot;
+public class MessageHandler extends Handler {
 
-    public BotApiMethod<?> answerMessage(Message message, Bot bot) {
-        this.bot = bot;
+    public MessageHandler(ReplyKeyboardMaker replyKeyboardMaker,
+                          InlineKeyboardMaker inlineKeyboardMaker,
+                          RecipeService recipeService) {
+        super(replyKeyboardMaker, inlineKeyboardMaker, recipeService);
+    }
+
+    public BotApiMethod<?> answerMessage(Message message) {
         String chatId = message.getChatId().toString();
 
         return switch (message.getText()) {
