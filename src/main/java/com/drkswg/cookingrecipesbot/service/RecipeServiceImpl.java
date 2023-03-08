@@ -7,6 +7,7 @@ import com.drkswg.cookingrecipesbot.entity.RecipeStep;
 import com.drkswg.cookingrecipesbot.entity.User;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.checkerframework.checker.units.qual.A;
 import org.jvnet.hk2.annotations.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,6 +26,14 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     @Transactional
+    public int nextRecipePhotoSequence(Recipe recipe) { return DAO.nextRecipePhotoSequence(recipe); }
+
+    @Override
+    @Transactional
+    public boolean recipeExist(String recipeName) { return DAO.recipeExist(recipeName); }
+
+    @Override
+    @Transactional
     public void deleteNotFinishedRecipes(long userId) { DAO.deleteNotFinishedRecipes(userId); }
 
     @Override
@@ -33,7 +42,7 @@ public class RecipeServiceImpl implements RecipeService {
 
     @Override
     @Transactional
-    public void updateRecipe(Recipe recipe) { DAO.updateRecipe(recipe); }
+    public <T> void persistObject(T object) { DAO.persistObject(object); }
 
     @Override
     @Transactional

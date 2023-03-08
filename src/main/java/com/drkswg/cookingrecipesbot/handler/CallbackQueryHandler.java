@@ -1,5 +1,6 @@
 package com.drkswg.cookingrecipesbot.handler;
 
+import com.drkswg.cookingrecipesbot.api.TelegramApiClient;
 import com.drkswg.cookingrecipesbot.constants.ButtonNameEnum;
 import com.drkswg.cookingrecipesbot.entity.*;
 import com.drkswg.cookingrecipesbot.keyboard.InlineKeyboardMaker;
@@ -24,8 +25,9 @@ public class CallbackQueryHandler extends Handler {
 
     public CallbackQueryHandler(ReplyKeyboardMaker replyKeyboardMaker,
                                 InlineKeyboardMaker inlineKeyboardMaker,
-                                RecipeService recipeService) {
-        super(replyKeyboardMaker, inlineKeyboardMaker, recipeService);
+                                RecipeService recipeService,
+                                TelegramApiClient apiClient) {
+        super(replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient);
     }
 
     public BotApiMethod<?> processCallbackQuery(CallbackQuery buttonQuery) {
@@ -60,7 +62,7 @@ public class CallbackQueryHandler extends Handler {
                 """,
                 buttonQuery.getMessage().getChatId(), tempRecipe));
         currentStep.setRecipe(tempRecipe);
-        currentStep.setStep("add_temp_recipe");
+        currentStep.setStep("add_recipe_name");
 
         return new SendMessage(chatId, "Введите название рецепта:");
     }

@@ -1,6 +1,7 @@
 package com.drkswg.cookingrecipesbot.config;
 
 import com.drkswg.cookingrecipesbot.Bot;
+import com.drkswg.cookingrecipesbot.api.TelegramApiClient;
 import com.drkswg.cookingrecipesbot.dao.RecipeDAO;
 import com.drkswg.cookingrecipesbot.handler.CallbackQueryHandler;
 import com.drkswg.cookingrecipesbot.handler.MessageHandler;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
+import org.springframework.web.client.RestTemplate;
 import org.telegram.telegrambots.meta.api.methods.updates.SetWebhook;
 
 import java.util.Set;
@@ -32,6 +34,9 @@ public class Config {
     final RecipeDAO recipeDAO;
 
     public Config(RecipeDAO recipeDAO) { this.recipeDAO = recipeDAO; }
+
+    @Bean
+    public TelegramApiClient apiClient() { return new TelegramApiClient(new RestTemplate()); }
 
     @Bean
     @Scope("singleton")

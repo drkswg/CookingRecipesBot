@@ -1,10 +1,13 @@
 package com.drkswg.cookingrecipesbot.api;
 
+import com.drkswg.cookingrecipesbot.handler.Handler;
 import exception.TelegramFileNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.jvnet.hk2.annotations.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -19,27 +22,32 @@ import java.text.MessageFormat;
 import java.util.Objects;
 
 @Service
-@FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
+@FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class TelegramApiClient {
+    static final Logger LOGGER = LoggerFactory.getLogger(TelegramApiClient.class);
     @Value("${telegram.api-url}")
     String url;
     @Value("${telegram.bot-token}")
     String botToken;
-    RestTemplate restTemplate;
+    final RestTemplate restTemplate;
 
-    public File getDocumentFile(String fileId) {
+    public File getDocumentFile(String fileId, String filePath) {
         try {
             return restTemplate.execute(
                     Objects.requireNonNull(getDocumentTelegramFileUrl(fileId)),
                     HttpMethod.GET,
                     null,
                     clientHttpResponse -> {
-                        File file = File.createTempFile("download", "tmp");
-                        StreamUtils.copy(clientHttpResponse.getBody(), new FileOutputStream(file));
+                        File file = new File(filePath);
+                        FileOutputStream fileOutputStream = new FileOutputStream(file);
+                        StreamUtils.copy(clientHttpResponse.getBody(), fileOutputStream);
+                        fileOutputStream.close();
+
                         return file;
                     });
-        } catch (Exception e) {
+        } catch (Exception exc) {
+            LOGGER.error("Ошибка при получении загруженного файла", exc);
             throw new TelegramFileNotFoundException();
         }
     }
@@ -53,6 +61,7 @@ public class TelegramApiClient {
                     new ParameterizedTypeReference<>() {
                     }
             );
+
             return Objects.requireNonNull(response.getBody()).getResult().getFileUrl(this.botToken);
         } catch (Exception e) {
             throw new TelegramFileNotFoundException();

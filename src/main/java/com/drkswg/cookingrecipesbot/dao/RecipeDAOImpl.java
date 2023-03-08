@@ -1,12 +1,10 @@
 package com.drkswg.cookingrecipesbot.dao;
 
-import com.drkswg.cookingrecipesbot.entity.Recipe;
-import com.drkswg.cookingrecipesbot.entity.RecipeCategory;
-import com.drkswg.cookingrecipesbot.entity.RecipeStep;
-import com.drkswg.cookingrecipesbot.entity.User;
+import com.drkswg.cookingrecipesbot.entity.*;
 import com.drkswg.cookingrecipesbot.handler.MessageHandler;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
+import org.checkerframework.checker.units.qual.A;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
@@ -16,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
+import javax.persistence.NonUniqueResultException;
 import java.util.List;
 
 
@@ -31,6 +30,22 @@ public class RecipeDAOImpl implements RecipeDAO {
     }
 
     @Override
+    public int nextRecipePhotoSequence(Recipe recipe) {
+        Session currentSession = entityManager.unwrap(Session.class);
+        Query<Integer> query = currentSession.createQuery("select max(sequence) from Photo " +
+                "where recipe_id = :recipe_id", Integer.class);
+        query.setParameter("recipe_id", recipe.getId());
+        int nextSequence = 1;
+
+        try {
+            int tmpSequence = query.getSingleResult() == null ? 0 : query.getSingleResult();
+            nextSequence = tmpSequence + 1;
+        } catch (NoResultException ignored) {}
+
+        return nextSequence;
+    }
+
+    @Override
     public void deleteNotFinishedRecipes(long userId) {
         LOGGER.info(String.format("Очистка незаконченных рецептов пользователя: %s", userId));
         Session currentSession = entityManager.unwrap(Session.class);
@@ -41,8 +56,8 @@ public class RecipeDAOImpl implements RecipeDAO {
     }
 
     @Override
-    public void updateRecipe(Recipe recipe) {
-        entityManager.persist(recipe);
+    public <T> void persistObject(T object) {
+        entityManager.persist(object);
     }
 
     @Override
@@ -72,6 +87,23 @@ public class RecipeDAOImpl implements RecipeDAO {
             return query.getSingleResult();
         } catch (NoResultException noResExc) {
             return null;
+        }
+    }
+
+    @Override
+    public boolean recipeExist(String recipeName) {
+        Session currentSession = entityManager.unwrap(Session.class);
+        Query<Recipe> query = currentSession.createQuery("from Recipe where name = :name", Recipe.class)
+                .setParameter("name", recipeName);
+
+        try {
+            query.getSingleResult();
+
+            return true;
+        } catch (NonUniqueResultException sizEx) {
+            return true;
+        } catch (NoResultException noResExc) {
+            return false;
         }
     }
 

@@ -1,8 +1,13 @@
 package com.drkswg.cookingrecipesbot.handler;
 
+import com.drkswg.cookingrecipesbot.api.TelegramApiClient;
 import com.drkswg.cookingrecipesbot.constants.BotMessagesEnum;
 import com.drkswg.cookingrecipesbot.entity.Recipe;
 import com.drkswg.cookingrecipesbot.entity.User;
+import com.drkswg.cookingrecipesbot.handler.processing.AddRecipeDescription;
+import com.drkswg.cookingrecipesbot.handler.processing.AddRecipeDescriptionPhotos;
+import com.drkswg.cookingrecipesbot.handler.processing.AddRecipeName;
+import com.drkswg.cookingrecipesbot.handler.processing.NonTypicalMessageProcessor;
 import com.drkswg.cookingrecipesbot.keyboard.InlineKeyboardMaker;
 import com.drkswg.cookingrecipesbot.keyboard.ReplyKeyboardMaker;
 import com.drkswg.cookingrecipesbot.model.UserStep;
@@ -14,14 +19,16 @@ import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
+import java.io.IOException;
+
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class MessageHandler extends Handler {
-
     public MessageHandler(ReplyKeyboardMaker replyKeyboardMaker,
                           InlineKeyboardMaker inlineKeyboardMaker,
-                          RecipeService recipeService) {
-        super(replyKeyboardMaker, inlineKeyboardMaker, recipeService);
+                          RecipeService recipeService,
+                          TelegramApiClient apiClient) {
+        super(replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient);
     }
 
     public BotApiMethod<?> answerMessage(Message message) {
@@ -33,8 +40,11 @@ public class MessageHandler extends Handler {
             case "Завтраки" -> getRecipes(chatId, "Завтраки");
             case "Горячие блюда" -> getRecipes(chatId, "Горячие блюда");
             case "Добавить рецепт" -> addRecipe(message);
+            case "/add_steps" -> null;
             case "/test" -> test(message);
-            case null -> null;
+            case null -> processNonTypicalMessage(message);
+//            case null -> null;
+//            case null ->  test(message);
             default -> processNonTypicalMessage(message);
         };
     }
@@ -44,88 +54,39 @@ public class MessageHandler extends Handler {
         System.out.println("Файл: " + message.getDocument());
         System.out.println("Подпись: " + message.getCaption());
 
+//        try {
+//            attachPhotoToRecipe(message);
+//        } catch (IOException ioEx) {
+//            ioEx.printStackTrace();
+//        }
+
         return new SendMessage(message.getChatId().toString(), "test");
     }
 
-    private SendMessage processNonTypicalMessage(Message message) {
-        String chatId = message.getChatId().toString();
-        long chatIdOrig = message.getChatId();
-        long userId = message.getFrom().getId();
-        String userName = message.getFrom().getUserName();
-        User author = recipeService.addUserIfNotExist(userId, userName);
-        Recipe blankRecipe = recipeService.getBlankRecipe(author);
-        Recipe recipeWithNoDescription = recipeService.getRecipeWithNoDescription(author);
-        UserStep currentStep = bot.getUserStep(chatIdOrig);
-        SendMessage sendMessage;
+    private NonTypicalMessageProcessor getCurrentProcessStep(Message message) {
+        String currentStep = bot.getUserStep(message.getChatId()).getStep();
 
-        if (blankRecipe != null) {
-            blankRecipe.setName(message.getText());
-            recipeService.updateRecipe(blankRecipe);
-
-            LOGGER.info(String.format("""
-                Добавление информации о шагах пользователя (chat_id): %s -> add_recipe_description, рецепт -> %s
-                """,
-                    chatId, blankRecipe));
-            currentStep.setStep("add_recipe_description");
-            currentStep.setRecipe(blankRecipe);
-
-            sendMessage = new SendMessage(
-                    chatId,
-                    String.format("Введите описание и ингридиенты для рецепта \"%s\":", blankRecipe.getName())
-            );
-        } else if (recipeWithNoDescription != null) {
-            recipeWithNoDescription.setDescription(message.getText());
-            recipeService.updateRecipe(recipeWithNoDescription);
-
-            LOGGER.info(String.format("""
-                Добавление информации о шагах пользователя (chat_id): %s -> add_recipe_description_photos, рецепт -> %s
-                """,
-                    chatId, recipeWithNoDescription));
-            currentStep.setStep("add_recipe_description_photos");
-            currentStep.setRecipe(recipeWithNoDescription);
-
-            sendMessage = new SendMessage(
-                    chatId,
-                    String.format("""
-                            Прикрепите фотографии к описанию рецепта (можно сразу несколько) "%s"
-                            После окончания введите команду /add_steps
-                            """,
-                            recipeWithNoDescription.getName())
-            );
-        } else if (currentStep.getStep().equals("add_recipe_description_photos")) {
-
-
-            return null;
-        } else {
-            sendMessage = new SendMessage(chatId, "Категория не выбрана! Выберите категорию:");
-            sendMessage.setReplyMarkup(inlineKeyboardMaker.getCategoriesKeyboard());
-        }
-
-        return sendMessage;
+        return switch (currentStep) {
+            case "add_recipe_name" -> new AddRecipeName(
+                    replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
+            case "add_recipe_description" -> new AddRecipeDescription(
+                    replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
+            case "add_recipe_description_photos" -> new AddRecipeDescriptionPhotos(
+                    replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
+            default -> null;
+        };
     }
 
-    private void attachPhotoToRecipe(Recipe recipe) {
+    private SendMessage processNonTypicalMessage(Message message) {
+        NonTypicalMessageProcessor processor = getCurrentProcessStep(message);
 
+        return processor.getMessage();
     }
 
     private SendMessage addRecipe(Message message) {
-        long userId = message.getFrom().getId();
-        long chatId = message.getChatId();
         UserStep currentStep = bot.getUserStep(message.getChatId());
 
-        if (currentStep != null) {
-            LOGGER.info(String.format("Очистка информации о шагах пользователя (chat_id): %s", chatId));
-            bot.getUsersSteps().remove(currentStep);
-        }
-
-        recipeService.deleteNotFinishedRecipes(userId);
-
-        LOGGER.info(String.format("Добавление информации о шагах пользователя (chat_id): %s -> choosing_category", chatId));
-        bot.getUsersSteps().add(new UserStep(chatId, "choosing_category", null));
-        SendMessage sendMessage = new SendMessage(message.getChatId().toString(), "Выберите категорию:");
-        sendMessage.setReplyMarkup(inlineKeyboardMaker.getCategoriesKeyboard());
-
-        return sendMessage;
+        return recipeCategoryPick(currentStep, message, false);
     }
 
     private SendMessage getRecipes(String chatId, String type) {
