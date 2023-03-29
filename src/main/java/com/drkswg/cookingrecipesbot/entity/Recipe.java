@@ -32,7 +32,7 @@ public class Recipe {
     @JoinColumn(name = "rc_fk", nullable = false)
     RecipeCategory recipeCategory;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "recipe")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "recipe")
     Set<RecipeStep> recipeSteps;
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "recipe")

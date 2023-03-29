@@ -1,15 +1,15 @@
 package com.drkswg.cookingrecipesbot.dao;
 
 import com.drkswg.cookingrecipesbot.entity.*;
-import com.drkswg.cookingrecipesbot.handler.MessageHandler;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.checkerframework.checker.units.qual.A;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Repository;
 
 import javax.persistence.EntityManager;
@@ -19,14 +19,40 @@ import java.util.List;
 
 
 @Repository
+@Scope(proxyMode = ScopedProxyMode.INTERFACES)
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class RecipeDAOImpl implements RecipeDAO {
-    static final Logger LOGGER = LoggerFactory.getLogger(RecipeDAOImpl.class);
+public class DAOImpl implements DAO {
+    static final Logger LOGGER = LoggerFactory.getLogger(DAOImpl.class);
     EntityManager entityManager;
 
     @Autowired
-    public RecipeDAOImpl(EntityManager entityManager) {
+    public DAOImpl(EntityManager entityManager) {
         this.entityManager = entityManager;
+    }
+
+    @Override
+    public <T> void mergeObject(T object) {
+        entityManager.merge(object);
+    }
+
+    @Override
+    public int nextRecipeStepPhotoSequence(RecipeStep recipeStep) {
+        Session currentSession = entityManager.unwrap(Session.class);
+        Query<Integer> query = currentSession.createQuery("""
+                select max(sequence) from Photo
+                where recipe_id = :recipe_id
+                and recipe_step_id = :recipe_step_id
+                """, Integer.class)
+                .setParameter("recipe_id", recipeStep.getRecipe().getId())
+                .setParameter("recipe_step_id", recipeStep.getId());
+        int nextSequence = 1;
+
+        try {
+            int tmpSequence = query.getSingleResult() == null ? 0 : query.getSingleResult();
+            nextSequence = tmpSequence + 1;
+        } catch (NoResultException ignored) {}
+
+        return nextSequence;
     }
 
     @Override
@@ -49,8 +75,10 @@ public class RecipeDAOImpl implements RecipeDAO {
     public void deleteNotFinishedRecipes(long userId) {
         LOGGER.info(String.format("Очистка незаконченных рецептов пользователя: %s", userId));
         Session currentSession = entityManager.unwrap(Session.class);
-        currentSession.createQuery("delete from Recipe where description is null " +
-                        "and added_by = :user_id")
+        currentSession.createQuery("""
+                        delete from Recipe where description is null 
+                        and added_by = :user_id
+                        """)
                 .setParameter("user_id", userId)
                 .executeUpdate();
     }
@@ -190,7 +218,20 @@ public class RecipeDAOImpl implements RecipeDAO {
                 .setParameter("type", type)
                 .getSingleResult();
         Query<Recipe> query = currentSession
-                .createQuery("from Recipe where rc_fk = :recipeCategoryId order by id", Recipe.class)
+                .createQuery("""
+                        SELECT r
+                        FROM Recipe r
+                        WHERE r.name IS NOT NULL
+                          AND r.description IS NOT NULL
+                          and r.recipeCategory.id = :recipeCategoryId
+                          AND EXISTS (
+                            SELECT 1
+                            FROM RecipeStep s
+                            WHERE s.recipe = r
+                              AND s.name IS NOT NULL
+                              AND s.description IS NOT NULL
+                              )
+                        """, Recipe.class)
                 .setParameter("recipeCategoryId", recipeCategoryId);
 
         return query.getResultList();

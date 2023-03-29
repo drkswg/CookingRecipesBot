@@ -17,8 +17,10 @@ public interface RecipeService {
     Recipe addNewRecipeAuthorAndCategory(User author, RecipeCategory recipeCategory);
     Recipe getBlankRecipe(User author);
     <T> void persistObject(T object);
+    <T> void mergeObject(T object);
     Recipe getRecipeWithNoDescription(User author);
     void deleteNotFinishedRecipes(long userId);
     boolean recipeExist(String recipeName);
     int nextRecipePhotoSequence(Recipe recipe);
+    int nextRecipeStepPhotoSequence(RecipeStep recipeStep);
 }

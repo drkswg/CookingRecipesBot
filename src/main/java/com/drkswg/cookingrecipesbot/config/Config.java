@@ -2,15 +2,13 @@ package com.drkswg.cookingrecipesbot.config;
 
 import com.drkswg.cookingrecipesbot.Bot;
 import com.drkswg.cookingrecipesbot.api.TelegramApiClient;
-import com.drkswg.cookingrecipesbot.dao.RecipeDAO;
+import com.drkswg.cookingrecipesbot.dao.DAO;
 import com.drkswg.cookingrecipesbot.handler.CallbackQueryHandler;
 import com.drkswg.cookingrecipesbot.handler.MessageHandler;
 import com.drkswg.cookingrecipesbot.model.UserStep;
 import com.drkswg.cookingrecipesbot.service.RecipeService;
 import com.drkswg.cookingrecipesbot.service.RecipeServiceImpl;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -31,9 +29,9 @@ public class Config {
     String botName;
     @Value("${telegram.bot-token}")
     String botToken;
-    final RecipeDAO recipeDAO;
+    final DAO DAO;
 
-    public Config(RecipeDAO recipeDAO) { this.recipeDAO = recipeDAO; }
+    public Config(DAO DAO) { this.DAO = DAO; }
 
     @Bean
     public TelegramApiClient apiClient() { return new TelegramApiClient(new RestTemplate()); }
@@ -43,7 +41,7 @@ public class Config {
     public Set<UserStep> usersSteps() { return ConcurrentHashMap.newKeySet(); }
 
     @Bean
-    public RecipeService recipeService() { return new RecipeServiceImpl(recipeDAO); }
+    public RecipeService recipeService() { return new RecipeServiceImpl(DAO); }
 
     @Bean
     public SetWebhook setWebhookInstance() {

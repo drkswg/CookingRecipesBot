@@ -3,11 +3,9 @@ package com.drkswg.cookingrecipesbot.handler;
 import com.drkswg.cookingrecipesbot.api.TelegramApiClient;
 import com.drkswg.cookingrecipesbot.constants.BotMessagesEnum;
 import com.drkswg.cookingrecipesbot.entity.Recipe;
+import com.drkswg.cookingrecipesbot.entity.RecipeStep;
 import com.drkswg.cookingrecipesbot.entity.User;
-import com.drkswg.cookingrecipesbot.handler.processing.AddRecipeDescription;
-import com.drkswg.cookingrecipesbot.handler.processing.AddRecipeDescriptionPhotos;
-import com.drkswg.cookingrecipesbot.handler.processing.AddRecipeName;
-import com.drkswg.cookingrecipesbot.handler.processing.NonTypicalMessageProcessor;
+import com.drkswg.cookingrecipesbot.handler.processing.*;
 import com.drkswg.cookingrecipesbot.keyboard.InlineKeyboardMaker;
 import com.drkswg.cookingrecipesbot.keyboard.ReplyKeyboardMaker;
 import com.drkswg.cookingrecipesbot.model.UserStep;
@@ -20,6 +18,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
 
 import java.io.IOException;
+import java.util.HashSet;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -34,17 +33,19 @@ public class MessageHandler extends Handler {
     public BotApiMethod<?> answerMessage(Message message) {
         String chatId = message.getChatId().toString();
 
+        System.out.println(message);
+
         return switch (message.getText()) {
             case "/start", "/help" -> getHelpMessage(chatId);
             case "Супы" -> getRecipes(chatId, "Супы");
             case "Завтраки" -> getRecipes(chatId, "Завтраки");
             case "Горячие блюда" -> getRecipes(chatId, "Горячие блюда");
             case "Добавить рецепт" -> addRecipe(message);
-            case "/add_steps" -> null;
+            case "/add_steps" -> addRecipeStep(message);
+            case "/next_step" -> null;
+            case "/done" -> null;
             case "/test" -> test(message);
             case null -> processNonTypicalMessage(message);
-//            case null -> null;
-//            case null ->  test(message);
             default -> processNonTypicalMessage(message);
         };
     }
@@ -63,6 +64,29 @@ public class MessageHandler extends Handler {
         return new SendMessage(message.getChatId().toString(), "test");
     }
 
+    private SendMessage addRecipeStep(Message message) {
+        long chatId = message.getChatId();
+        String chatIdStr = String.valueOf(chatId);
+        UserStep currentStep = bot.getUserStep(chatId);
+        int recipeStepNum = currentStep.getRecipe().getRecipeSteps().size() + 1;
+        String text = recipeStepNum == 1 ? """
+                Теперь добавим пошаговый план рецепта.
+                Напишите название первого шага, например
+                "Приготовление бульона":
+                """ : "Введите название шага";
+        SendMessage sendMessage = new SendMessage(chatIdStr, text);
+        RecipeStep recipeStep = new RecipeStep();
+        recipeStep.setRecipe(currentStep.getRecipe());
+        recipeStep.setStep(recipeStepNum);
+        recipeService.persistObject(recipeStep);
+        currentStep.getRecipe().getRecipeSteps().add(recipeStep);
+
+        logCurrentStep(chatIdStr, String.format("add_step_name (%s)", recipeStepNum), currentStep.getRecipe());
+        currentStep.setStep("add_step_name");
+
+        return sendMessage;
+    }
+
     private NonTypicalMessageProcessor getCurrentProcessStep(Message message) {
         String currentStep = bot.getUserStep(message.getChatId()).getStep();
 
@@ -72,6 +96,12 @@ public class MessageHandler extends Handler {
             case "add_recipe_description" -> new AddRecipeDescription(
                     replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
             case "add_recipe_description_photos" -> new AddRecipeDescriptionPhotos(
+                    replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
+            case "add_step_name" -> new AddRecipeStepName(
+                    replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
+            case "add_step_description" -> new AddRecipeStepDescription(
+                    replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
+            case "add_step_photo" -> new AddRecipeStepPhoto(
                     replyKeyboardMaker, inlineKeyboardMaker, recipeService, apiClient, message, bot);
             default -> null;
         };

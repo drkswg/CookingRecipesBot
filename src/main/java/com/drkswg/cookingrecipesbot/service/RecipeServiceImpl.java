@@ -1,13 +1,12 @@
 package com.drkswg.cookingrecipesbot.service;
 
-import com.drkswg.cookingrecipesbot.dao.RecipeDAO;
+import com.drkswg.cookingrecipesbot.dao.DAO;
 import com.drkswg.cookingrecipesbot.entity.Recipe;
 import com.drkswg.cookingrecipesbot.entity.RecipeCategory;
 import com.drkswg.cookingrecipesbot.entity.RecipeStep;
 import com.drkswg.cookingrecipesbot.entity.User;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
-import org.checkerframework.checker.units.qual.A;
 import org.jvnet.hk2.annotations.Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,68 +14,65 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@FieldDefaults(level = AccessLevel.PRIVATE)
+@Transactional
+@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class RecipeServiceImpl implements RecipeService {
-    RecipeDAO DAO;
+    DAO dao;
 
     @Autowired
-    public RecipeServiceImpl(RecipeDAO DAO) {
-        this.DAO = DAO;
+    public RecipeServiceImpl(DAO dao) {
+        this.dao = dao;
     }
 
     @Override
-    @Transactional
-    public int nextRecipePhotoSequence(Recipe recipe) { return DAO.nextRecipePhotoSequence(recipe); }
+    public int nextRecipeStepPhotoSequence(RecipeStep recipeStep) { return dao.nextRecipeStepPhotoSequence(recipeStep); }
 
     @Override
-    @Transactional
-    public boolean recipeExist(String recipeName) { return DAO.recipeExist(recipeName); }
+    public <T> void mergeObject(T object) {
+        dao.mergeObject(object);
+    }
 
     @Override
-    @Transactional
-    public void deleteNotFinishedRecipes(long userId) { DAO.deleteNotFinishedRecipes(userId); }
+    public int nextRecipePhotoSequence(Recipe recipe) { return dao.nextRecipePhotoSequence(recipe); }
 
     @Override
-    @Transactional
-    public Recipe getRecipeWithNoDescription(User author) { return DAO.getRecipeWithNoDescription(author); }
+    public boolean recipeExist(String recipeName) { return dao.recipeExist(recipeName); }
 
     @Override
-    @Transactional
-    public <T> void persistObject(T object) { DAO.persistObject(object); }
+    public void deleteNotFinishedRecipes(long userId) { dao.deleteNotFinishedRecipes(userId); }
 
     @Override
-    @Transactional
-    public Recipe getBlankRecipe(User author) { return DAO.getBlankRecipe(author); }
+    public Recipe getRecipeWithNoDescription(User author) { return dao.getRecipeWithNoDescription(author); }
 
     @Override
-    @Transactional
+    public <T> void persistObject(T object) { dao.persistObject(object); }
+
+    @Override
+    public Recipe getBlankRecipe(User author) { return dao.getBlankRecipe(author); }
+
+    @Override
     public RecipeCategory getRecipeCategory(String categoryName) {
-        return DAO.getRecipeCategory(categoryName);
+        return dao.getRecipeCategory(categoryName);
     }
 
     @Override
-    @Transactional
     public Recipe addNewRecipeAuthorAndCategory(User author, RecipeCategory recipeCategory) {
-        return DAO.addNewRecipeAuthorAndCategory(author, recipeCategory);
+        return dao.addNewRecipeAuthorAndCategory(author, recipeCategory);
     }
 
     @Override
-    @Transactional
     public User addUserIfNotExist(long id, String userName) {
-        return DAO.addUserIfNotExist(id, userName);
+        return dao.addUserIfNotExist(id, userName);
     }
 
     @Override
-    @Transactional
     public RecipeStep getNextStep(Recipe recipe, int step) {
-        return DAO.getNextStep(recipe, step);
+        return dao.getNextStep(recipe, step);
     }
 
     @Override
-    @Transactional
-    public Recipe getRecipe(String name) { return DAO.getRecipe(name); }
+    public Recipe getRecipe(String name) { return dao.getRecipe(name); }
 
     @Override
-    @Transactional
-    public List<Recipe> getRecipes(String type) { return DAO.getRecipes(type); }
+    public List<Recipe> getRecipes(String type) { return dao.getRecipes(type); }
 }

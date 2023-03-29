@@ -23,7 +23,7 @@ public class AddRecipeDescriptionPhotos extends NonTypicalMessageProcessor {
     @Override
     public SendMessage getMessage() {
         try {
-            attachPhotoToRecipe(message);
+            attachPhoto(message);
         } catch (IOException ioEx) {
             LOGGER.error(String.format("Ошибка при добавлении фото к рецепту %s", currentStep.getRecipe()), ioEx);
         }
