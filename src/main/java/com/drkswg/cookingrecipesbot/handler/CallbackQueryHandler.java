@@ -71,7 +71,7 @@ public class CallbackQueryHandler extends Handler {
         Recipe recipe = getRecipeIngredients(data);
         SendMessage message = new SendMessage(chatId, recipe.getDescription());
         RecipeStep recipeStep = recipeService.getNextStep(recipe, 1);
-        message.setReplyMarkup(inlineKeyboardMaker.getNextStepKeyboard(recipeStep));
+        message.setReplyMarkup(inlineKeyboardMaker.getFirstStepKeyboard(recipeStep));
         recipe.getPhotos().stream()
                 .sorted(Comparator.comparing(Photo::getSequence))
                 .filter(photo -> photo.getRecipeStep() == null)

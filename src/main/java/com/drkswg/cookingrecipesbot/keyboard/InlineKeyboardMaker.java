@@ -24,12 +24,26 @@ public class InlineKeyboardMaker {
         return inlineKeyboardMarkup;
     }
 
-    public InlineKeyboardMarkup getNextStepKeyboard(RecipeStep recipeStep) {
+    public InlineKeyboardMarkup getFirstStepKeyboard(RecipeStep recipeStep) {
         List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        int step = recipeStep.getStep();
         rowList.add(getButton("Далее",
                 recipeStep.getRecipe().getName()
                         + " "
-                        + (recipeStep.getStep() + 1)));
+                        + step));
+        InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
+        inlineKeyboardMarkup.setKeyboard(rowList);
+
+        return inlineKeyboardMarkup;
+    }
+
+    public InlineKeyboardMarkup getNextStepKeyboard(RecipeStep recipeStep) {
+        List<List<InlineKeyboardButton>> rowList = new ArrayList<>();
+        int step = recipeStep.getStep() + 1;
+        rowList.add(getButton("Далее",
+                recipeStep.getRecipe().getName()
+                        + " "
+                        + step));
         InlineKeyboardMarkup inlineKeyboardMarkup = new InlineKeyboardMarkup();
         inlineKeyboardMarkup.setKeyboard(rowList);
 

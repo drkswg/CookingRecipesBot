@@ -120,70 +120,9 @@ public class Handler {
         recipePhoto.setRecipe(currentRecipe);
         recipePhoto.setRecipeStep(recipeStep);
 
-//        if (recipeStep != null) {
-//            recipePhoto.setRecipeStep(recipeStep);
-//        } else {
-//            recipePhoto.setRecipe(currentRecipe);
-//        }
-
         LOGGER.info("Сохранение объекта фото в БД: " + recipePhoto);
         recipeService.persistObject(recipePhoto);
     }
-
-//    protected void attachPhoto(Message message) throws IOException {
-//        Document document = message.getDocument();
-//        List<PhotoSize> photos = message.getPhoto();
-//        String fileId;
-//        String extension;
-//
-//        if (document != null) {
-//            fileId = document.getFileId();
-//            extension = "." + FilenameUtils.getExtension(document.getFileName());
-//        } else if (message.getPhoto() != null
-//                & message.getPhoto().size() > 0) {
-//            PhotoSize maxPhotoSize = photos.stream().max(Comparator.comparing(PhotoSize::getHeight)).get();
-//            fileId = maxPhotoSize.getFileId();
-//            File tmpFile = apiClient.getDocumentFile(fileId,
-//                    "photos/tmp" + File.separator + UUID.randomUUID());
-//            InputStream inputStream = new ByteArrayInputStream(FileUtils.readFileToByteArray(tmpFile));
-//            extension = URLConnection.guessContentTypeFromStream(inputStream);
-//            inputStream.close();
-//            tmpFile.delete();
-//            extension = MimeDetector.getExtension(extension);
-//        } else {
-//            throw new DocumentNotAttachedException("Recipe photo not attached");
-//        }
-//
-//        UserStep currentStep = bot.getUserStep(message.getChatId());
-//        Recipe currentRecipe = currentStep.getRecipe();
-//        String translitedRecipeName = Translit.convert(currentRecipe.getName());
-//        Path recipePhotoPath = Paths.get("photos"
-//                + File.separator
-//                + translitedRecipeName);
-//        int photoSequence = recipeService.nextRecipePhotoSequence(currentRecipe);
-//        String fileName = recipePhotoPath
-//                + File.separator
-//                + translitedRecipeName
-//                + "_"
-//                + photoSequence
-//                + extension;
-//
-//        if (!Files.exists(recipePhotoPath)) {
-//            Files.createDirectory(recipePhotoPath);
-//        }
-//
-//        File photo = apiClient.getDocumentFile(fileId, fileName);
-//
-//        LOGGER.info("Сохранение файла: " + photo.getAbsolutePath());
-//
-//        Photo recipePhoto = new Photo();
-//        recipePhoto.setPath(photo.getAbsolutePath());
-//        recipePhoto.setSequence(photoSequence);
-//        recipePhoto.setRecipe(currentRecipe);
-//
-//        LOGGER.info("Сохранение объекта фото в БД: " + recipePhoto);
-//        recipeService.persistObject(recipePhoto);
-//    }
 
     protected void logCurrentStep(String chatId, String step, Recipe recipe) {
         LOGGER.info(String.format("""

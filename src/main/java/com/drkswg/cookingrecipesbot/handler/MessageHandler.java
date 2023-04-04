@@ -33,35 +33,19 @@ public class MessageHandler extends Handler {
     public BotApiMethod<?> answerMessage(Message message) {
         String chatId = message.getChatId().toString();
 
-        System.out.println(message);
-
         return switch (message.getText()) {
             case "/start", "/help" -> getHelpMessage(chatId);
             case "Супы" -> getRecipes(chatId, "Супы");
             case "Завтраки" -> getRecipes(chatId, "Завтраки");
             case "Горячие блюда" -> getRecipes(chatId, "Горячие блюда");
             case "Добавить рецепт" -> addRecipe(message);
-            case "/add_steps" -> addRecipeStep(message);
-            case "/next_step" -> null;
-            case "/done" -> null;
-            case "/test" -> test(message);
+            case "/add_steps", "/next_step" -> addRecipeStep(message);
+            case "/done" -> new SendMessage(
+                    chatId, "Рецепт добавлен! Вы можете найти его в соответствующем разделе"
+            );
             case null -> processNonTypicalMessage(message);
             default -> processNonTypicalMessage(message);
         };
-    }
-
-    private SendMessage test(Message message) {
-        System.out.println(message.getPhoto());
-        System.out.println("Файл: " + message.getDocument());
-        System.out.println("Подпись: " + message.getCaption());
-
-//        try {
-//            attachPhotoToRecipe(message);
-//        } catch (IOException ioEx) {
-//            ioEx.printStackTrace();
-//        }
-
-        return new SendMessage(message.getChatId().toString(), "test");
     }
 
     private SendMessage addRecipeStep(Message message) {
