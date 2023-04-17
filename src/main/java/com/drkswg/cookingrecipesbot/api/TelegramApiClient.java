@@ -1,7 +1,6 @@
 package com.drkswg.cookingrecipesbot.api;
 
-import com.drkswg.cookingrecipesbot.handler.Handler;
-import exception.TelegramFileNotFoundException;
+import com.drkswg.cookingrecipesbot.exception.TelegramFileNotFoundException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;

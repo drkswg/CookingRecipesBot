@@ -2,9 +2,7 @@ package com.drkswg.cookingrecipesbot.handler;
 
 import com.drkswg.cookingrecipesbot.api.TelegramApiClient;
 import com.drkswg.cookingrecipesbot.constants.BotMessagesEnum;
-import com.drkswg.cookingrecipesbot.entity.Recipe;
 import com.drkswg.cookingrecipesbot.entity.RecipeStep;
-import com.drkswg.cookingrecipesbot.entity.User;
 import com.drkswg.cookingrecipesbot.handler.processing.*;
 import com.drkswg.cookingrecipesbot.keyboard.InlineKeyboardMaker;
 import com.drkswg.cookingrecipesbot.keyboard.ReplyKeyboardMaker;
@@ -16,9 +14,6 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Message;
-
-import java.io.IOException;
-import java.util.HashSet;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)

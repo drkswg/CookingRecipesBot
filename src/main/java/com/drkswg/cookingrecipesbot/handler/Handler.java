@@ -11,7 +11,7 @@ import com.drkswg.cookingrecipesbot.model.MimeDetector;
 import com.drkswg.cookingrecipesbot.model.Translit;
 import com.drkswg.cookingrecipesbot.model.UserStep;
 import com.drkswg.cookingrecipesbot.service.RecipeService;
-import exception.DocumentNotAttachedException;
+import com.drkswg.cookingrecipesbot.exception.DocumentNotAttachedException;
 import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.apache.commons.io.FileUtils;
